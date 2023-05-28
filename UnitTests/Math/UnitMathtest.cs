@@ -122,6 +122,8 @@ namespace UnitTests
         public void Pow()
         {
             Length twoMeters = Length.From(2, LengthUnit.Meter);
+            Ratio ratio = Ratio.From(2, RatioUnit.SI);
+            Ratio ratio2 = Ratio.From(2.5, RatioUnit.SI);
 
             var powMinus3 = twoMeters.Pow(-3);
             var powMinus2 = twoMeters.Pow(-2);
@@ -131,6 +133,14 @@ namespace UnitTests
             var pow2 = twoMeters.Pow(2);
             var pow3 = twoMeters.Pow(3);
 
+            var pow4 = ratio.Pow((double)4);
+            var pow5 = ratio.Pow(4.0);
+            var pow6 = ratio.Pow(4.5);
+
+            var pow7 = ratio2.Pow((double)4);
+            var pow8 = ratio2.Pow(4.0);
+            var pow9 = ratio2.Pow(4.5);
+
             Assert.AreEqual(Math.Pow(2, -3), (double)powMinus3.SI);
             Assert.AreEqual(Math.Pow(2, -2), (double)powMinus2.SI);
             Assert.AreEqual(Math.Pow(2, -1), (double)powMinus1.SI);
@@ -138,6 +148,14 @@ namespace UnitTests
             Assert.AreEqual(Math.Pow(2, 1), (double)pow1.SI);
             Assert.AreEqual(Math.Pow(2, 2), (double)pow2.SI);
             Assert.AreEqual(Math.Pow(2, 3), (double)pow3.SI);
+
+            Assert.AreEqual(Math.Pow(2, 4), (double)pow4.SI);
+            Assert.AreEqual(Math.Pow(2, 4.0), (double)pow5.SI);
+            Assert.AreEqual(Math.Pow(2, 4.5), (double)pow6.SI, 0.00000000001);
+
+            Assert.AreEqual(Math.Pow(2.5, 4), (double)pow7.SI);
+            Assert.AreEqual(Math.Pow(2.5, 4.0), (double)pow8.SI);
+            Assert.AreEqual(Math.Pow(2.5, 4.5), (double)pow9.SI, 0.00000000001);
         }
 
         [TestMethod]
