@@ -342,6 +342,9 @@ namespace EngineeringUnits
             return a.Unit.Pow(toPower);
         }
 
+        public static Ratio Pow(this Ratio a, int toPower) {
+            return new Ratio(Math.Pow(a.SI, toPower), RatioUnit.SI);
+        }
         public static Ratio Pow(this Ratio a, double toPower) {
             return new Ratio(Math.Pow(a.SI, toPower), RatioUnit.SI);
         }
