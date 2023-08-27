@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CodeGen
 {
-    class ListOfUnitsForDifferentGenerators
+    public class ListOfUnitsForDifferentGenerators
     {
 
         public static List<string> GetListOfCombinedUnits()
@@ -35,7 +35,7 @@ namespace CodeGen
         {
             return new List<KeyValuePair<string,string>>() 
             {
-                new KeyValuePair<string, string>( "SpecificEnergy","Enthalpy"),
+                new KeyValuePair<string, string>("SpecificEnergy","Enthalpy"),
                 new KeyValuePair<string, string>("SpecificEntropy","SpecificHeatCapacity")
                
             };

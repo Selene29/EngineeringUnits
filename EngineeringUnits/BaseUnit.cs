@@ -1,33 +1,25 @@
 using Fractions;
 using Newtonsoft.Json;
-using EngineeringUnits.Units;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Text;
 using System;
-using System.Linq;
-using System.Collections.Concurrent;
+using System.Globalization;
 
 namespace EngineeringUnits
 {
     //The baseunit is inherited by all other unit.
     //It stores the value and the unitsystem
 
-
-
     [JsonObject(MemberSerialization.Fields)]
     public class BaseUnit : IEquatable<BaseUnit>, IComparable, IComparable<BaseUnit>, IFormattable, IUnitSystem
     {
 
         protected bool Inf { get; init; }
-        public UnitSystem Unit { get; init;}
+        public UnitSystem Unit { get; init; }
 
         [Obsolete("Use .As() instead - ex myPower.As(PowerUnit.Watt)")]
-        public double Value => (double)baseValue;
+        public double Value => (double)GetBaseValue();
         protected decimal NEWValue { get; init; }
 
-        public BaseUnit() {}
+        public BaseUnit() { }
         public BaseUnit(decimal value, UnitSystem unitSystem)
         {
             Unit = unitSystem;
@@ -37,8 +29,8 @@ namespace EngineeringUnits
         {
             Unit = unitSystem;
 
-            if (IsValueOverDecimalMax(value))            
-                Inf = true;        
+            if (IsValueOverDecimalMax(value))
+                Inf = true;
             else
             {
                 Inf = false;
@@ -57,11 +49,13 @@ namespace EngineeringUnits
         }
 
         //public decimal baseValue => (NEWValue * (decimal)Unit.SumConstant());
-        public decimal baseValue => (decimal)(Unit.SumConstant() * (Fraction)NEWValue); //This is very expensive to use!!
-
+        private decimal baseValue => (decimal)(Unit.SumConstant() * (Fraction)NEWValue); //This is very expensive to use!!
 
         public static UnknownUnit operator +(BaseUnit left, BaseUnit right)
         {
+            if (left is null || right is null)
+                return null;
+
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] + [{right.Unit}]. Can't add two different units!");
 
@@ -80,9 +74,11 @@ namespace EngineeringUnits
         }
         public static UnknownUnit operator -(BaseUnit left, BaseUnit right)
         {
+            if (left is null || right is null)
+                return null;
+
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] - [{right.Unit}]. Can't subtract two different units!");
-
 
             try
             {
@@ -99,6 +95,9 @@ namespace EngineeringUnits
         }
         public static UnknownUnit operator *(BaseUnit left, BaseUnit right)
         {
+            if (left is null || right is null)
+                return null;
+
             try
             {
                 var NewTestValue = left.NEWValue * right.NEWValue;
@@ -113,10 +112,11 @@ namespace EngineeringUnits
         }
         public static UnknownUnit operator /(BaseUnit left, BaseUnit right)
         {
+            if (left is null || right is null)
+                return null;
+
             if (right.NEWValue == 0m)
                 return new UnknownUnit(double.PositiveInfinity, left.Unit / right.Unit);
-
-
 
             try
             {
@@ -133,22 +133,20 @@ namespace EngineeringUnits
 
         public static UnknownUnit operator /(BaseUnit left, UnknownUnit right)
         {
-            return left / right.BaseUnit;
+            return left / right?.BaseUnit;
         }
         public static UnknownUnit operator /(UnknownUnit left, BaseUnit right)
         {
-            return left.BaseUnit / right;
+            return left?.BaseUnit / right;
         }
         public static UnknownUnit operator *(BaseUnit left, UnknownUnit right)
         {
-            return left * right.BaseUnit;
+            return left * right?.BaseUnit;
         }
         public static UnknownUnit operator *(UnknownUnit left, BaseUnit right)
         {
-            return left.BaseUnit * right;
+            return left?.BaseUnit * right;
         }
-
-
 
         public static bool operator ==(BaseUnit left, BaseUnit right)
         {
@@ -157,16 +155,13 @@ namespace EngineeringUnits
             if (left is null || right is null)
                 return false;
 
-
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] == [{right.Unit}]. Can't compare two different units!");
 
-
-            if (left.Unit.IsSIUnit() && right.Unit.IsSIUnit())            
+            if (left.Unit.IsSIUnit() && right.Unit.IsSIUnit())
                 return left.NEWValue == right.NEWValue;
-            
 
-            return left.NEWValue == right.GetValueAs(left.Unit); 
+            return left.NEWValue == right.GetValueAs(left.Unit);
         }
         public static bool operator !=(BaseUnit left, BaseUnit right)
         {
@@ -174,7 +169,6 @@ namespace EngineeringUnits
                 return false;
             if (left is null || right is null)
                 return true;
-
 
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] != [{right.Unit}]. Can't compare two different units!");
@@ -186,9 +180,13 @@ namespace EngineeringUnits
         }
         public static bool operator <=(BaseUnit left, BaseUnit right)
         {
+            if (left is null && right is null)
+                return true;
+            if (left is null || right is null)
+                return false;
+
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] <= [{right.Unit}]. Can't compare two different units!");
-
 
             if (left.Unit.IsSIUnit() && right.Unit.IsSIUnit())
                 return left.NEWValue <= right.NEWValue;
@@ -197,18 +195,24 @@ namespace EngineeringUnits
         }
         public static bool operator >=(BaseUnit left, BaseUnit right)
         {
+            if (left is null && right is null)
+                return true;
+            if (left is null || right is null)
+                return false;
+
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] >= [{right.Unit}]. Can't compare two different units!");
 
-
             if (left.Unit.IsSIUnit() && right.Unit.IsSIUnit())
                 return left.NEWValue >= right.NEWValue;
-
 
             return left.NEWValue >= right.GetValueAs(left.Unit);
         }
         public static bool operator <(BaseUnit left, BaseUnit right)
         {
+            if (left is null || right is null)
+                return false;
+
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] < [{right.Unit}]. Can't compare two different units!");
 
@@ -219,6 +223,9 @@ namespace EngineeringUnits
         }
         public static bool operator >(BaseUnit left, BaseUnit right)
         {
+            if (left is null || right is null)
+                return false;
+
             if (left.Unit != right.Unit)
                 throw new WrongUnitException($"Trying to do [{left.Unit}] > [{right.Unit}]. Can't compare two different units!");
 
@@ -227,13 +234,11 @@ namespace EngineeringUnits
 
         public static implicit operator UnknownUnit(BaseUnit baseUnit)
         {
-            if (baseUnit is null)            
+            if (baseUnit is null)
                 return null;
-            
 
             return new(baseUnit);
         }
-
 
         /// <summary>
         ///     Gets the default string representation of value and unit.
@@ -255,7 +260,6 @@ namespace EngineeringUnits
         /// <returns>The string representation.</returns>
         public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
 
-
         /// <summary>
         /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
@@ -269,28 +273,25 @@ namespace EngineeringUnits
 
             if (provider is null)
                 provider = CultureInfo.InvariantCulture;
-            
 
             //Set value
-            string value = format[0] switch
+            var value = format[0] switch
             {
                 'A'or'a' => "",
                 'U'or'u' => "",
                 'Q'or'q' => "",
                 'V'or'v' => NEWValue.DisplaySignificantDigits(int.Parse(format.Remove(0, 1))),
                 'S'or's' => NEWValue.DisplaySignificantDigits(int.Parse(format.Remove(0, 1))),
-                       _ => NEWValue.ToString(format, provider),
+                _ => NEWValue.ToString(format, provider),
             };
 
-            if (Inf && value != "")            
+            if (Inf && value != "")
                 value = double.PositiveInfinity.ToString();
 
-
-
             //Set unit
-            string GetUnit = GetStandardSymbol(Unit);
+            var GetUnit = GetStandardSymbol(Unit);
 
-            string unit = format[0] switch
+            var unit = format[0] switch
             {
                 'A'or'a' => GetUnit,
                 'U'or'u' => GetUnit,
@@ -298,25 +299,22 @@ namespace EngineeringUnits
                 'V'or'v' => "",
                 _ => $" {GetUnit}",
             };
-            
 
             //Merged and return       
             return $"{value}{unit}";
         }
 
-
         private decimal ConvertValueInto(BaseUnit From)
         {
-            var Factor = From.Unit.ConvertionFactor(Unit);
+            Fraction Factor = From.Unit.ConvertionFactor(Unit);
 
             return (decimal)(Factor * (Fraction)NEWValue);
         }
 
-
         public decimal GetValueAs(UnitSystem To)
         {
             Fraction b1 = Unit.SumOfBConstants();
-            Fraction b2 = To.SumOfBConstants();     
+            Fraction b2 = To.SumOfBConstants();
             Fraction Factor = To.ConvertionFactor(Unit);
 
             Fraction y2test2;
@@ -327,12 +325,10 @@ namespace EngineeringUnits
             }
             else
             {
-                Fraction b3test2 = Factor * (b1 * -1) + b2;
-                y2test2 = Factor * (Fraction)NEWValue + b3test2;
+                Fraction b3test2 = (Factor * (b1 * -1)) + b2;
+                y2test2 = (Factor * (Fraction)NEWValue) + b3test2;
 
             }
-
-
 
             //Fraction b3test2 = Factor * (b1 * -1) + b2;
             //y2test2 = Factor * (Fraction)NEWValue + b3test2;    
@@ -347,11 +343,7 @@ namespace EngineeringUnits
             return (double)GetValueAs(To);
         }
 
-        public string DisplaySymbol()
-        {
-            return Unit.ReduceUnits().ToString();
-        }
-
+        public string DisplaySymbol() => Unit.ReduceUnits().ToString();
 
         public override int GetHashCode()
         {
@@ -369,11 +361,10 @@ namespace EngineeringUnits
             if (_unit.Symbol is not null)
                 return _unit.Symbol;
 
-
             //This check the list of Predefined unit and if it finds a match it returns that Symbol
             return UnitTypebase.ListOf<T>()
                 .Find(x => x.Unit.SumConstant() == _unit.SumConstant())?
-                .Unit.ToString();            
+                .Unit.ToString();
         }
         public virtual string GetStandardSymbol(UnitSystem _unit)
         {
@@ -387,33 +378,29 @@ namespace EngineeringUnits
 
         private static bool IsValueOverDecimalMax(double value)
         {
-            return double.IsInfinity(value) || 
-                    value > (double)decimal.MaxValue || 
-                    value < (double)decimal.MinValue || 
+            return double.IsInfinity(value) ||
+                    value > (double)decimal.MaxValue ||
+                    value < (double)decimal.MinValue ||
                     double.IsNaN(value);
         }
 
-        public override bool Equals(Object obj)
+        public override bool Equals(object obj)
         {
             //Check for null and compare run-time types.
-            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            if ((obj == null) || !GetType().Equals(obj.GetType()))
                 return false;
             else
                 return this == (BaseUnit)obj;
         }
 
-        public bool Equals(BaseUnit other)
-        {
-            return this == other;
-        }
+        public bool Equals(BaseUnit other) => this == other;
 
         public int CompareTo(object obj)
         {
-            BaseUnit local = (BaseUnit)obj;
+            var local = (BaseUnit)obj;
 
             //if (Unit != local.Unit)
             //    throw new WrongUnitException($"Cant do CompareTo on two differnt units!");
-
 
             //return (int)((double)NEWValue - local.As(this));
             return CompareTo(local);
@@ -425,7 +412,7 @@ namespace EngineeringUnits
 
             if (Unit != other.Unit)
                 throw new WrongUnitException($"Cant do CompareTo on two differnt units!");
-;
+            ;
             return (this - other).SI switch
             {
                 0m => 0,
@@ -434,16 +421,16 @@ namespace EngineeringUnits
             };
         }
 
-        public UnknownUnit Abs()
+        public UnknownUnit AbsIntern()
         {
+
             if (Unit.IsSIUnit())
             {
-                if (NEWValue > 0)                
-                    return this;                
-                else                
-                    return this * -1;              
+                if (NEWValue > 0)
+                    return this;
+                else
+                    return this * -1;
             }
-
 
             if (baseValue < 0)
                 return this * -1;
@@ -452,7 +439,13 @@ namespace EngineeringUnits
         }
 
 
+        public decimal GetBaseValue()
+        {
+            if (Unit.IsSIUnit())
+                return NEWValue;
+
+            return baseValue;
+
+        }
     }
-
-
 }

@@ -22,6 +22,9 @@ namespace EngineeringUnits
         /// <exception cref="WrongUnitException">gg</exception>
         public static UnknownUnit Sqrt(this UnknownUnit a)
         {
+            if (a is null)
+                return null;
+
             UnitSystem NewUnitSystem = a.Unit.ReduceUnitsHard();
             decimal value = a.BaseUnit.GetValueAs(NewUnitSystem);
 
@@ -38,6 +41,8 @@ namespace EngineeringUnits
         /// <exception cref="WrongUnitException">gg</exception>
         public static UnknownUnit Sqrt(this BaseUnit a)
         {
+            if (a is null)
+                return null;
 
             UnitSystem NewUnitSystem = a.Unit.ReduceUnitsHard();
             decimal value = a.GetValueAs(NewUnitSystem);
@@ -251,21 +256,25 @@ namespace EngineeringUnits
 
         /// <returns>Absolute value of your unit</returns>
         /// <param name="a">Source value</param>
-        //public static UnknownUnit Abs(this BaseUnit a)
-        //{
+        public static UnknownUnit Abs(this BaseUnit a)
+        {
+            if (a is null)
+                return null;
 
-        //    return a.AbsIntern();
+            if (a.GetBaseValue() > 0)
+                return a;
 
-        //    if (a.baseValue < 0)            
-        //        return a * -1;            
-        //    else
-        //        return a;
-        //}
+            return a * -1;
+
+        }
 
         /// <returns>Absolute value of your unit</returns>
         /// <param name="a">Source value</param>
         public static UnknownUnit Abs(this UnknownUnit a)
         {
+            if (a is null)
+                return null;
+
             return a.BaseUnit.Abs();
         }
 
@@ -311,6 +320,9 @@ namespace EngineeringUnits
 
         public static UnknownUnit Pow(this BaseUnit a, int toPower)
         {
+            if (a is null)
+                return null;
+
             return toPower switch
             {
                 0 => 1,
@@ -335,7 +347,10 @@ namespace EngineeringUnits
 
         public static UnknownUnit Pow(this UnknownUnit a, int toPower)
         {
-           return a.BaseUnit.Pow(toPower);
+            if (a is null)
+                return null;
+
+            return a.BaseUnit.Pow(toPower);
         }
         public static UnitSystem Pow(this UnitTypebase a, int toPower)
         {
@@ -351,6 +366,8 @@ namespace EngineeringUnits
 
         public static UnknownUnit InRangeOf(this BaseUnit a, UnknownUnit Min, UnknownUnit Max)
         {
+            if (a is null || Min is null || Max is null)
+                return null;
 
             a.UnitCheck(Min);
             a.UnitCheck(Max);
@@ -381,37 +398,61 @@ namespace EngineeringUnits
 
         public static bool IsZero(this BaseUnit a)
         {
-            return a.baseValue == 0m;
+            if (a is null)
+                return false;
+
+            return a.GetBaseValue() == 0m;
         }
         public static bool IsZero(this UnknownUnit a)
         {
+            if (a is null)
+                return false;
+
             return a.BaseUnit.IsZero();
         }
 
         public static bool IsNotZero(this BaseUnit a)
         {
+            if (a is null)
+                return false;
+
             return !a.IsZero();
         }
         public static bool IsNotZero(this UnknownUnit a)
         {
+            if (a is null)
+                return false;
+
             return a.BaseUnit.IsNotZero();
         }
 
         public static bool IsAboveZero(this BaseUnit a)
         {
-            return a.baseValue > 0;
+            if (a is null)
+                return false;
+
+            return a.GetBaseValue() > 0;
         }
         public static bool IsAboveZero(this UnknownUnit a)
         {
+            if (a is null)
+                return false;
+
             return a.BaseUnit.IsAboveZero();
         }
 
         public static bool IsBelowZero(this BaseUnit a)
         {
-            return a.baseValue < 0;
+            if (a is null)
+                return false;
+
+            return a.GetBaseValue() < 0;
         }
         public static bool IsBelowZero(this UnknownUnit a)
         {
+            if (a is null)
+                return false;
+
             return a.BaseUnit.IsBelowZero();
         }
 
@@ -498,6 +539,11 @@ namespace EngineeringUnits
             //return valueToBeRoundedUp;
         }
 
+        public static UnknownUnit RoundToNearest(this IEnumerable<BaseUnit> list, UnknownUnit valueToBeRoundedDown)
+        {  
+            return list.OrderBy(x => (x - valueToBeRoundedDown).Abs()).FirstOrDefault();
+        }
+
 
         public static void UnitCheck(this IUnitSystem a, IUnitSystem b)
         {
@@ -523,6 +569,9 @@ namespace EngineeringUnits
 
         public static UnknownUnit Minimum(this UnknownUnit unit, UnknownUnit minimum)
         {
+            if (unit is null || minimum is null)
+                return null;
+
             if (unit > minimum)            
                 return unit;
 
@@ -531,6 +580,9 @@ namespace EngineeringUnits
 
         public static UnknownUnit Minimum(this BaseUnit unit, UnknownUnit minimum)
         {
+            if (unit is null || minimum is null)
+                return null;
+
             if (unit > minimum)
                 return unit;
 
@@ -539,6 +591,9 @@ namespace EngineeringUnits
 
         public static UnknownUnit Maximum(this UnknownUnit unit, UnknownUnit maximum)
         {
+            if (unit is null || maximum is null)
+                return null;
+
             if (unit < maximum)
                 return unit;
 
@@ -547,6 +602,10 @@ namespace EngineeringUnits
 
         public static UnknownUnit Maximum(this BaseUnit unit, UnknownUnit maximum)
         {
+            if (unit is null || maximum is null)
+                return null;
+
+
             if (unit < maximum)
                 return unit;
 
